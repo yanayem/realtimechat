@@ -5,6 +5,7 @@ import SignUp from "./Pages/Auth/SignUp"
 import Home from './Pages/Home';
 import Sidebar from './Pages/Sidebar';
 import Topbar from './Pages/Topbar';
+import Chatbar from './Pages/Chat/Chatbar';
 
 const App = () => {
   // Get the current path (e.g., "/", "/signup", or "/home")
@@ -21,6 +22,7 @@ const App = () => {
       
       {/* 1. Conditional Rendering: Only show Sidebar if NOT on login/signup */}
       {!hideSidebarPaths.includes(location.pathname) && <Sidebar />}
+      {!hideSidebarPaths.includes(location.pathname) && <Chatbar />}
 
       {/* 2. Content Area */}
       <div className='flex-1 h-full overflow-y-auto'>
