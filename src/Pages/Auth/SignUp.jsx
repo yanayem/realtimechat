@@ -1,18 +1,85 @@
-import React from 'react'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const signupfields = [
   { name: "Name", type: "text", id: "name", placeholder: "Your Full Name" },
   { name: "Phone Number", type: "tel", id: "phone", placeholder: "+1 (555) 000-0000" },
   { name: "Email", type: "email", id: "email", placeholder: "name@company.com" },
   { name: "Password", type: "password", id: "password", placeholder: "••••••••" },
-  { name: "Confirm Password", type: "password", id: "confirm-password", placeholder: "••••••••" }
+  { name: "Confirm Password", type: "password", id: "confirmPassword", placeholder: "••••••••" }
 ]
 
 const SignUp = () => {
+  const navigate = useNavigate();
+
+  // 1. Initialize state for all fields
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    gender: 'other',
+    agree: false
+  });
+  const [loading, setLoading] = useState(false);
+
+  // 2. Handle text and radio changes
+  const handleChange = (e) => {
+    const { id, name, value, type, checked } = e.target;
+    const fieldId = id || name; // Radio buttons use 'name', inputs use 'id'
+    
+    setFormData((prev) => ({
+      ...prev,
+      [fieldId]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  // 3. Submit logic
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Basic Validation
+    if (formData.password !== formData.confirmPassword) {
+      return alert("Passwords do not match!");
+    }
+    if (!formData.agree) {
+      return alert("Please agree to the Terms & Conditions");
+    }
+
+    setLoading(true);
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          password: formData.password,
+          gender: formData.gender
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Registration Successful! Please Log In.");
+        navigate('/login');
+      } else {
+        alert(data.message || "Registration failed");
+      }
+    } catch (err) {
+      alert("Cannot connect to server. Is the backend running?");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-green-50 dark:from-slate-950 dark:to-slate-900 transition-colors duration-500 p-4">
-      
-      {/* Glassmorphism Card */}
       <div className="w-full max-w-md p-8 rounded-3xl bg-white/70 dark:bg-slate-900/80 shadow-2xl backdrop-blur-xl border border-white dark:border-slate-800 transition-all">
         
         <header className="mb-6 text-center">
@@ -20,7 +87,7 @@ const SignUp = () => {
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Join PuzzleFusion to start solving</p>
         </header>
 
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {signupfields.map((field) => (
             <div key={field.id} className="space-y-1">
               <label htmlFor={field.id} className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
@@ -29,7 +96,10 @@ const SignUp = () => {
               <input 
                 type={field.type} 
                 id={field.id} 
+                value={formData[field.id]}
+                onChange={handleChange}
                 placeholder={field.placeholder}
+                required
                 className="w-full p-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800 text-slate-900 dark:text-white outline-hidden focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all placeholder:text-slate-400"
               />
             </div>
@@ -41,7 +111,14 @@ const SignUp = () => {
             <div className="flex gap-2">
               {['Male', 'Female', 'Other'].map((gender) => (
                 <label key={gender} className="flex-1 group relative cursor-pointer">
-                  <input type="radio" name="gender" value={gender.toLowerCase()} className="peer sr-only" />
+                  <input 
+                    type="radio" 
+                    name="gender" 
+                    value={gender.toLowerCase()} 
+                    checked={formData.gender === gender.toLowerCase()}
+                    onChange={handleChange}
+                    className="peer sr-only" 
+                  />
                   <div className="p-2.5 text-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-800 text-sm text-slate-600 dark:text-slate-400 transition-all peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-500 peer-checked:shadow-lg peer-checked:shadow-green-500/30 hover:border-green-300">
                     {gender}
                   </div>
@@ -52,15 +129,24 @@ const SignUp = () => {
 
           {/* Terms & Conditions */}
           <label className="flex items-center gap-3 cursor-pointer group mt-2">
-            <input type="checkbox" className="w-5 h-5 rounded-md border-slate-300 accent-green-500 cursor-pointer" />
+            <input 
+              type="checkbox" 
+              id="agree"
+              checked={formData.agree}
+              onChange={handleChange}
+              className="w-5 h-5 rounded-md border-slate-300 accent-green-500 cursor-pointer" 
+            />
             <span className="text-xs text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">
               I agree to the <a href="#" className="underline font-medium">Terms & Conditions</a>
             </span>
           </label>
 
-          {/* Submit Button */}
-          <button className="w-full mt-6 bg-green-500 hover:bg-green-600 active:scale-95 text-white font-bold py-3.5 rounded-2xl shadow-xl shadow-green-500/25 transition-all cursor-pointer">
-            Register Now
+          <button 
+            type="submit"
+            disabled={loading}
+            className="w-full mt-6 bg-green-500 hover:bg-green-600 active:scale-95 text-white font-bold py-3.5 rounded-2xl shadow-xl shadow-green-500/25 transition-all cursor-pointer disabled:opacity-50"
+          >
+            {loading ? "Creating Account..." : "Register Now"}
           </button>
 
           <p className="text-center text-sm text-slate-500 dark:text-slate-400 pt-2">
@@ -72,4 +158,4 @@ const SignUp = () => {
   )
 }
 
-export default SignUp
+export default SignUp;
