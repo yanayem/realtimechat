@@ -6,6 +6,7 @@ import Home from './Pages/Home';
 import Sidebar from './Pages/Sidebar';
 import Topbar from './Pages/Topbar';
 import Chatbar from './Pages/Chat/Chatbar';
+import ChatPage from './Pages/Chat/Chatpage';
 
 const App = () => {
   // Get the current path (e.g., "/", "/signup", or "/home")
@@ -34,6 +35,7 @@ const App = () => {
           {/* Main App Routes */}
           <Route path='/home' element={<Home />} />
           {/* Add more routes here, e.g., /profile, /settings */}
+          <Route path='/chat' element={<ChatPage />} />
         </Routes>
       </div>
     </div>

@@ -17,7 +17,7 @@ mongoose.connect(mongoURI)
 .catch(err => console.log("❌ DB connection error:", err));
 
 // Register
-app.post('/api/signup', async (req, res) => {
+app.post('/signup', async (req, res) => {
   try {
     const { name, phone, email, password, gender } = req.body;
 
@@ -44,7 +44,7 @@ app.post('/api/signup', async (req, res) => {
 });
 
 // Login
-app.post('/api/login', async (req, res) => {
+app.post('/', async (req, res) => {
   try {
     const { email, password } = req.body;
 
