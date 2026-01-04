@@ -1,37 +1,63 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-const UserSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: [true, "Name is required"],
-    trim: true 
-  },
-  phone: { 
-    type: String,
-    trim: true
-  },
-  email: { 
-    type: String, 
-    required: [true, "Email is required"], 
-    unique: true,
-    lowercase: true, // Converts email to lowercase automatically
-    trim: true 
-  },
-  password: { 
-    type: String, 
-    required: [true, "Password is required"] 
-  },
-  gender: { 
-    type: String, 
-    enum: ['male', 'female', 'other'],
-    default: 'other'
-  },
-  AvatarURL: { 
-    type: String, 
-    default: "https://cdn-icons-png.flaticon.com/512/149/149071.png" // Default avatar
-  }
-}, { 
-  timestamps: true // Automatically creates 'createdAt' and 'updatedAt'
+const userSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: [true, "Please add a name"],
+    },
+    email: {
+        type: String,
+        required: [true, "Please add an email"],
+        unique: true,
+        match: [
+            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+            "Please add a valid email",
+        ],
+    },
+    phone: {
+        type: String,
+        required: [true, "Please add a phone number"],
+    },
+    password: {
+        type: String,
+        required: [true, "Please add a password"],
+        minlength: 6,
+        select: true, // Set to false if you want to hide it from queries by default
+    },
+    gender: {
+        type: String,
+        enum: ["male", "female", "other"],
+        default: "other",
+    },
+    avatar: {
+        type: String,
+        default: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+    },
+    status: {
+        type: String,
+        default: "Hey there! I am using YT Chat.",
+    },
+    isOnline: {
+        type: Boolean,
+        default: false,
+    },
+}, { timestamps: true });
+
+// --- 1. Password Hashing (Pre-save Hook) ---
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
 });
 
-export default mongoose.model("User", UserSchema);
+// --- 2. Password Comparison Method ---
+userSchema.methods.comparePassword = async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+};
+
+const User = mongoose.model('User', userSchema);
+export default User;
