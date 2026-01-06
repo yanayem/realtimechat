@@ -1,24 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { Search, UserPlus } from 'lucide-react';
 
 const Chatbar = ({ onSelectUser, selectedUserId }) => {
-  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-  const currentUser = JSON.parse(localStorage.getItem('user'));
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/all/${currentUser.id}`);
-        setUsers(res.data);
-      } catch (err) {
-        console.error(err);
-        console.error("Could not load users");
-      }
-    };
-    fetchUsers();
-  }, [currentUser.id]);
+  // Mocked users (frontend-only)
+  const users = [
+    { _id: "1", name: "Yeasin Arafat" },
+    { _id: "2", name: "John Doe" },
+    { _id: "3", name: "Jane Smith" },
+    { _id: "4", name: "Alice Johnson" },
+  ];
 
   // Filter users based on search input
   const filteredUsers = users.filter(u => 
@@ -27,6 +19,7 @@ const Chatbar = ({ onSelectUser, selectedUserId }) => {
 
   return (
     <div className='w-80 h-full border-r border-slate-800 bg-slate-900 flex flex-col'>
+
       {/* Search Header */}
       <div className='p-4 space-y-4'>
         <div className='flex items-center justify-between'>
@@ -35,6 +28,7 @@ const Chatbar = ({ onSelectUser, selectedUserId }) => {
             <UserPlus size={18} className='text-green-500'/>
           </button>
         </div>
+
         <div className='relative'>
           <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-500' size={16}/>
           <input 

@@ -1,63 +1,35 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, "Please add a name"],
-    },
-    email: {
-        type: String,
-        required: [true, "Please add an email"],
-        unique: true,
-        match: [
-            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-            "Please add a valid email",
-        ],
-    },
-    phone: {
-        type: String,
-        required: [true, "Please add a phone number"],
-    },
-    password: {
-        type: String,
-        required: [true, "Please add a password"],
-        minlength: 6,
-        select: true, // Set to false if you want to hide it from queries by default
-    },
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    phone: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
     gender: {
-        type: String,
-        enum: ["male", "female", "other"],
-        default: "other",
+      type: String,
+      enum: ["male", "female", "others"],
+      default: "others",
     },
-    avatar: {
-        type: String,
-        default: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-    },
-    status: {
-        type: String,
-        default: "Hey there! I am using YT Chat.",
-    },
-    isOnline: {
-        type: Boolean,
-        default: false,
-    },
-}, { timestamps: true });
+    avatar: { type: String, default: "" } // profile pic
+  },
+  { timestamps: true }
+);
 
-// --- 1. Password Hashing (Pre-save Hook) ---
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        return next();
-    }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
+/* ======================
+   PASSWORD HASH
+====================== */
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
-// --- 2. Password Comparison Method ---
-userSchema.methods.comparePassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+/* ======================
+   COMPARE PASSWORD
+====================== */
+userSchema.methods.comparePassword = async function (password) {
+  return bcrypt.compare(password, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
-export default User;
+export default mongoose.model("User", userSchema);

@@ -1,42 +1,45 @@
-import React, { useState } from 'react';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import React from "react";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 
-// Import Pages
-import Login from './Pages/Auth/LogIn';
-import SignUp from './Pages/Auth/SignUp';
-import Home from './Pages/Home';
-import ChatPage from './Pages/Chat/Chatpage';
+// Pages
+import Login from "./Pages/Auth/LogIn";
+import SignUp from "./Pages/Auth/SignUp";
+import Home from "./Pages/Home";
+import Chatbar from "./Pages/Chat/Chatbar";
+import ChatPage from "./Pages/Chat/Chatpage";
+import Profile from "./Pages/Profile";
 
-// Import Components
-import Sidebar from './Pages/Sidebar';
-import Topbar from './Pages/Topbar';
-import Chatbar from './Pages/Chat/Chatbar';
-import ProtectedRoute from './components/ProtectedRoute';
-
+// Components
+import Sidebar from "./Pages/Sidebar";
+import Topbar from "./Pages/Topbar";
 
 const App = () => {
-  const [selectedUser, setSelectedUser] = useState(null);
   const location = useLocation();
-  const isAuthPage = location.pathname === '/' || location.pathname === '/signup';
+
+  // Login & Signup pages
+  const isAuthPage =
+    location.pathname === "/" || location.pathname === "/signup";
 
   return (
-    <div className='flex h-screen w-full bg-slate-950 text-white overflow-hidden'>
+    <div className="flex h-screen w-full bg-slate-950 text-white">
+      {/* Sidebar only for Home */}
       {!isAuthPage && <Sidebar />}
-      
-      {/* Pass the selection function to Chatbar */}
-      {!isAuthPage && <Chatbar onSelectUser={setSelectedUser} selectedUserId={selectedUser?._id} />}
+      {!isAuthPage && <Chatbar />}
 
-      <div className='flex-1 flex flex-col min-w-0'>
+      <div className="flex-1 flex flex-col">
+        {/* Topbar only for Home */}
         {!isAuthPage && <Topbar />}
-        <div className='flex-1 overflow-y-auto'>
+
+        <div className="flex-1 overflow-y-auto">
           <Routes>
-            <Route path='/chat' element={
-              <ProtectedRoute>
-                {/* Pass the selected user data to ChatPage */}
-                <ChatPage selectedUser={selectedUser} />
-              </ProtectedRoute>
-            } />
-            {/* ... other routes */}
+            <Route path="/" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/profile" element={<Profile />} />
+
+            {/* fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </div>

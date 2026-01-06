@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react'; // Import the icons
+import { Eye, EyeOff } from 'lucide-react'; // Password toggle icons
 
-const loginfields = [
+const loginFields = [
   { label: "Email", type: "email", id: "email", placeholder: "name@company.com" },
   { label: "Password", type: "password", id: "password", placeholder: "••••••••" },
-]
+];
 
 const LogIn = () => {
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // New state for visibility
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
-  }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +23,7 @@ const LogIn = () => {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${apiUrl}/api/login`, {
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -33,14 +32,23 @@ const LogIn = () => {
       const data = await response.json();
 
       if (response.ok) {
+        if (!data.token) {
+          alert("Token not received from server!");
+          setLoading(false);
+          return;
+        }
+
+        // Save token and user info
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        navigate('/home'); 
+
+        // Navigate to home safely
+        navigate('/home', { replace: true });
       } else {
         alert(data.message || "Login failed");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       alert("Cannot connect to server. Is the backend running?");
     } finally {
       setLoading(false);
@@ -48,36 +56,34 @@ const LogIn = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-green-50 dark:from-slate-950 dark:to-slate-900 transition-colors duration-500">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-green-50 dark:from-slate-950 dark:to-slate-900 transition-colors duration-500 p-4">
       <div className="w-full max-w-md p-8 rounded-3xl bg-white/80 dark:bg-slate-900/80 shadow-2xl backdrop-blur-md border border-white dark:border-slate-800">
-        
+
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             Welcome<span className="text-green-500">.</span>
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">Please enter your details to sign in</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
+            Please enter your details to sign in
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {loginfields.map((field) => (
+          {loginFields.map((field) => (
             <div key={field.id} className="flex flex-col gap-1.5">
               <label htmlFor={field.id} className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
                 {field.label}
               </label>
-              
-              <div className="relative"> {/* Wrapper for relative positioning */}
-                <input 
-                  // Dynamically change type for password field
-                  type={field.id === 'password' ? (showPassword ? 'text' : 'password') : field.type} 
+              <div className="relative">
+                <input
+                  type={field.id === 'password' ? (showPassword ? 'text' : 'password') : field.type}
                   id={field.id}
                   placeholder={field.placeholder}
                   value={formData[field.id]}
                   onChange={handleChange}
                   required
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none transition-all placeholder:text-slate-400 pr-12" 
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none transition-all placeholder:text-slate-400 pr-12"
                 />
-                
-                {/* Only show the eye button for the password field */}
                 {field.id === 'password' && (
                   <button
                     type="button"
@@ -88,7 +94,7 @@ const LogIn = () => {
                   </button>
                 )}
               </div>
-            </div>    
+            </div>
           ))}
 
           <div className="flex items-center justify-between text-xs px-1">
@@ -98,9 +104,9 @@ const LogIn = () => {
             <a href="#" className="font-semibold text-green-600 hover:text-green-500">Forgot Password?</a>
           </div>
 
-          <button 
-            disabled={loading}
+          <button
             type="submit"
+            disabled={loading}
             className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-500/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Log In"}
@@ -114,7 +120,11 @@ const LogIn = () => {
 
         <div className="grid grid-cols-3 gap-3 mb-8">
           {[{ name: 'Google', icon: 'G' }, { name: 'Facebook', icon: 'F' }, { name: 'Apple', icon: 'A' }].map(social => (
-            <button key={social.name} type="button" className="flex justify-center py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl transition-all cursor-pointer font-bold dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800">
+            <button
+              key={social.name}
+              type="button"
+              className="flex justify-center py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl transition-all cursor-pointer font-bold dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
               {social.icon}
             </button>
           ))}
@@ -125,7 +135,7 @@ const LogIn = () => {
         </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default LogIn;
